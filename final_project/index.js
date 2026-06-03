@@ -15,7 +15,7 @@ app.use("/customer",session({
     saveUninitialized: true
 }));
 
-// Authentiation middleware
+// Authentiation middleware written here
 app.use("/customer/auth/*", function auth(req,res,next) {
     // Check if session exists 
  if (!req.sessiom || !req.session.username) {

@@ -7,22 +7,31 @@ const public_users = express.Router();
 
 // Register new user
 public_users.post("/register", (req,res) => {
-  const { username, password } = req.body;
+  const { firstName, lastName, email, DOB, password } = req.body;
   
-  if(!username || !password){
-    return res.status(400).json({message:"Username and password required."});
+  if (!firstName || !lastName || !DOB || !email || !password) {
+    return res.status(400).json({message:"All fields are required"});
   }
-
-  if (!isValid(username)) {
+  const userExists = users.find(user=>user.email.toLowerCase() === email.toLowerCase())
+  if (userExists) {
     return res.status(409).json({message:"User already exists"});
   }
 
-  users.push({ username,password });
-  return res.status(200).json({message: "User registered successfully"});
+ const newUser = {
+   firstName,
+   lastName,
+   email,
+   DOB,
+   password,
+};
+
+ users.push(newUser);
+
+ return res.status(201).json({message: "Successfully registered"});
 });
 
 // Get the book list available in the shop using async-await
-public_users.get("/", async (req, res) => {
+public_users.get('/', async (req, res) => {
     try {
         // Simulate async call
     const allBooks = await new Promise((resolve) => {
