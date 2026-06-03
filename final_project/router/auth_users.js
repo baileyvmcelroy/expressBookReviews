@@ -22,40 +22,42 @@ let users = [
 
 // Helper functions; check if username is valid
 const isValid = (username) => {
-    return !users.some(user => user.email.toLowerCase() === username.toLowercase());
+    return !users.some(user => user.email.toLowerCase() === username.toLowerCase());
 };
 
 // Check if username/password match a registered user
 const authenticatedUser = (username,password) => {
-return users.find(user => user.email.toLowerCase() === username.toLowerCase());
+const user = users.find(user => user.email.toLowerCase() === username.toLowerCase());
 return user && user.password === password;
 };
 
 // Login route for registered users
-regd_users.post("/login", (req,res) => {
-  const { username, password } = req.body;
-
-  if(!isValid(username)) {
-    return res.status(404).json({message:"Invalid username"});
-  }
-
-  if(!authenticatedUser(username, password)) {
-    return res.status(401).json({message:"Invalid username or password"});
-  }
-
-  // Generate JWT (optional)
-  if (user) {
+regd_users.post("/login", (req, res) => {
+    const { username, password } = req.body;
+  
+    // Check if username exists
+    const user = users.find(user => user.email.toLowerCase() === username.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ message: "Invalid username" });
+    }
+  
+    // Check if password matches
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+  
+    // Generate JWT token
     const accessToken = jwt.sign(
-        { email:user.email },
-        'access',
-        { expiresIn: '2h' }
+      { email: user.email },
+      'access',
+      { expiresIn: '2h' }
     );
+  
+    // Save token in session
     req.session.authorization = { accessToken };
-    return res.status(200).json({ message: "User successfully logged in", accessToken});
-  } else {
-    return res.status(500).json({ message: "An error occured"});
-  }
-});
+  
+    return res.status(200).json({ message: "User successfully logged in", accessToken });
+  });
 
 // Add or update a book review 
 regd_users.put("/auth/review/:isbn", (req, res) => {
@@ -69,7 +71,6 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   try {
     const user = jwt.verify(token, 'access'); //Ensure the key matches the signing key
     const username = user.email;
-  }
 
   if(!books[isbn]) {
     return res.status(404).json({message: "Book not found" });
@@ -83,15 +84,6 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 } catch (err) {
     return res.status(403).json({message: "Invalid token or session expired"});
 }
-});
-
-  // Add or update review for this user
-  books[isbn].reviews[username]=review;
-
-  return res.status(200).json({
-    message:"Review for ISBN ${isbn} by ${username} added/updated successfully.",
-    reviews:books[isbn].reviews
-  }
 });
 
 // Delete book review by the logged-in user
